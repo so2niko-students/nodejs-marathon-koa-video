@@ -19,11 +19,18 @@ const routes = {
     'error' : () => ({ msg: 'Route is not supported'}),
 }
 
+const mwRouter = async (ctx, next) => {
+    const [, path, id] = ctx.path.split('/');
+    ctx.state.func = routes[path] || routes['error'];
+    ctx.state.id = id;
+    console.log('ROUTER: ', path);
+    await next();
+    console.log('ROUTER END');
+}
 
+app.use(mwRouter);
 app.use(async ctx => {
-    const [, path] = ctx.path.split('/');
-    const func = routes[path] || routes['error'];
-    ctx.body = await func();
+    ctx.body = await ctx.state.func(ctx.state.id);
 });
 
 app.listen(PORT, listenFunc);
